@@ -51,6 +51,8 @@ A RESTful API backend for a social network built with Node.js, Express, TypeScri
    npm run migrate
    ```
 
+   **Note**: See [TESTING.md](./TESTING.md) for detailed database setup instructions and testing guide.
+
 ## Running the Application
 
 ### Development
