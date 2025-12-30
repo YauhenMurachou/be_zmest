@@ -139,6 +139,21 @@ src/
 └── index.ts         # Application entry point
 ```
 
+## Deployment
+
+This project can be deployed to free hosting platforms. See deployment guides:
+
+- **[QUICK_DEPLOY.md](./QUICK_DEPLOY.md)** - Quick start guide (5 minutes)
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Detailed deployment instructions
+
+### Recommended Free Platforms:
+- **Railway** - Easiest setup, includes PostgreSQL
+- **Render** - Good free tier, automatic SSL
+- **Fly.io** - Fast performance, global edge
+
+### Frontend Integration:
+Set `FRONTEND_URL` environment variable to your frontend domain for CORS configuration.
+
 ## Best Practices
 
 This project follows:

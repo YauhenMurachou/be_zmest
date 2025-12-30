@@ -5,6 +5,7 @@ import { testConnection } from './database/connection';
 dotenv.config();
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+const HOST = process.env.HOST || '0.0.0.0';
 
 const startServer = async (): Promise<void> => {
   try {
@@ -12,8 +13,8 @@ const startServer = async (): Promise<void> => {
     console.log('Database connection established');
 
     const app = createApp();
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`Server is running on ${HOST}:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
