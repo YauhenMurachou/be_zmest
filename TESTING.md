@@ -110,19 +110,59 @@ curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "john@example.com",
-    "password": "password123"
+    "password": "password123",
+    "rememberMe": false
   }'
 ```
 
-Save the `token` from the response for authenticated requests.
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "userId": 1
+  }
+}
+```
 
-#### 4. Get Current User
+**Note:** The JWT token needs to be obtained from the login service. For testing, you may need to check the service implementation or use the token from the authentication response.
+
+#### 4. Logout
+```bash
+curl -X POST http://localhost:3000/api/auth/logout \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {}
+}
+```
+
+#### 5. Get Current User
 ```bash
 curl http://localhost:3000/api/auth/me \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
-#### 5. Create a Post
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "id": 1,
+    "email": "john@example.com",
+    "login": "johndoe"
+  }
+}
+```
+
+#### 6. Create a Post
 ```bash
 curl -X POST http://localhost:3000/api/posts \
   -H "Content-Type: application/json" \
@@ -133,9 +173,45 @@ curl -X POST http://localhost:3000/api/posts \
   }'
 ```
 
-#### 6. Get All Posts
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "post": {
+      "id": 1,
+      "title": "My First Post",
+      "content": "This is the content of my first post!",
+      "authorId": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "johndoe",
+        "email": "john@example.com"
+      }
+    }
+  }
+}
+```
+
+#### 7. Get All Posts
 ```bash
 curl http://localhost:3000/api/posts
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "posts": [...],
+    "limit": 50,
+    "offset": 0
+  }
+}
 ```
 
 With pagination:
@@ -143,17 +219,28 @@ With pagination:
 curl "http://localhost:3000/api/posts?limit=10&offset=0"
 ```
 
-#### 7. Get Post by ID
+#### 8. Get Post by ID
 ```bash
 curl http://localhost:3000/api/posts/1
 ```
 
-#### 8. Get Posts by Author
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "post": { ... }
+  }
+}
+```
+
+#### 9. Get Posts by Author
 ```bash
 curl http://localhost:3000/api/posts/author/1
 ```
 
-#### 9. Update a Post
+#### 10. Update a Post
 ```bash
 curl -X PUT http://localhost:3000/api/posts/1 \
   -H "Content-Type: application/json" \
@@ -164,10 +251,30 @@ curl -X PUT http://localhost:3000/api/posts/1 \
   }'
 ```
 
-#### 10. Delete a Post
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "post": { ... }
+  }
+}
+```
+
+#### 11. Delete a Post
 ```bash
 curl -X DELETE http://localhost:3000/api/posts/1 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {}
+}
 ```
 
 ### Using Postman
@@ -273,58 +380,103 @@ chmod +x test-api.sh
 
 ## Expected Responses
 
-### Success Responses
+All responses follow the **Operation Result Object** format:
 
-**Register/Login:**
+### Success Responses (resultCode: 0)
+
+**Register:**
 ```json
 {
-  "user": {
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "user": {
+      "id": 1,
+      "email": "john@example.com",
+      "username": "johndoe",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+}
+```
+
+**Login:**
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "userId": 1
+  }
+}
+```
+
+**Get Current User:**
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
     "id": 1,
     "email": "john@example.com",
-    "username": "johndoe",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  },
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    "login": "johndoe"
+  }
 }
 ```
 
 **Post:**
 ```json
 {
-  "post": {
-    "id": 1,
-    "title": "My Post",
-    "content": "Post content",
-    "authorId": 1,
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z",
-    "author": {
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "post": {
       "id": 1,
-      "username": "johndoe",
-      "email": "john@example.com"
+      "title": "My Post",
+      "content": "Post content",
+      "authorId": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "johndoe",
+        "email": "john@example.com"
+      }
     }
   }
 }
 ```
 
-### Error Responses
+### Error Responses (resultCode: 1)
 
 **Validation Error:**
 ```json
 {
-  "error": "Validation error",
-  "details": {
-    "email": ["Invalid email format"],
-    "password": ["Password must be at least 6 characters"]
-  }
+  "resultCode": 1,
+  "messages": [
+    "Invalid email format",
+    "Password must be at least 6 characters"
+  ],
+  "data": {}
 }
 ```
 
 **Unauthorized:**
 ```json
 {
-  "error": "Authentication token required"
+  "resultCode": 1,
+  "messages": ["Authentication token required"],
+  "data": {}
+}
+```
+
+**Not Found:**
+```json
+{
+  "resultCode": 1,
+  "messages": ["Post not found"],
+  "data": {}
 }
 ```
 

@@ -15,20 +15,41 @@ export const createPostHandler = async (
   response: Response
 ): Promise<void> => {
   if (!request.user) {
-    response.status(401).json({ error: 'Unauthorized' });
+    response.status(401).json({
+      resultCode: 1,
+      messages: ['Unauthorized'],
+      data: {},
+    });
     return;
   }
 
-  const input: PostCreateInput = request.body;
-  const post = await createPost(input, request.user.userId);
-  const postWithAuthor = await findPostByIdWithAuthor(post.id);
+  try {
+    const input: PostCreateInput = request.body;
+    const post = await createPost(input, request.user.userId);
+    const postWithAuthor = await findPostByIdWithAuthor(post.id);
 
-  if (!postWithAuthor) {
-    response.status(500).json({ error: 'Failed to retrieve created post' });
-    return;
+    if (!postWithAuthor) {
+      response.status(500).json({
+        resultCode: 1,
+        messages: ['Failed to retrieve created post'],
+        data: {},
+      });
+      return;
+    }
+
+    response.status(201).json({
+      resultCode: 0,
+      messages: [],
+      data: { post: postWithAuthor },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create post';
+    response.status(400).json({
+      resultCode: 1,
+      messages: [errorMessage],
+      data: {},
+    });
   }
-
-  response.status(201).json({ post: postWithAuthor });
 };
 
 export const getPostById = async (
@@ -38,18 +59,30 @@ export const getPostById = async (
   const postId = Number(request.params.id);
 
   if (Number.isNaN(postId)) {
-    response.status(400).json({ error: 'Invalid post ID' });
+    response.status(400).json({
+      resultCode: 1,
+      messages: ['Invalid post ID'],
+      data: {},
+    });
     return;
   }
 
   const post = await findPostByIdWithAuthor(postId);
 
   if (!post) {
-    response.status(404).json({ error: 'Post not found' });
+    response.status(404).json({
+      resultCode: 1,
+      messages: ['Post not found'],
+      data: {},
+    });
     return;
   }
 
-  response.status(200).json({ post });
+  response.status(200).json({
+    resultCode: 0,
+    messages: [],
+    data: { post },
+  });
 };
 
 export const getAllPosts = async (
@@ -63,7 +96,11 @@ export const getAllPosts = async (
   const validOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
 
   const posts = await findAllPosts(validLimit, validOffset);
-  response.status(200).json({ posts, limit: validLimit, offset: validOffset });
+  response.status(200).json({
+    resultCode: 0,
+    messages: [],
+    data: { posts, limit: validLimit, offset: validOffset },
+  });
 };
 
 export const getPostsByAuthor = async (
@@ -73,7 +110,11 @@ export const getPostsByAuthor = async (
   const authorId = Number(request.params.authorId);
 
   if (Number.isNaN(authorId)) {
-    response.status(400).json({ error: 'Invalid author ID' });
+    response.status(400).json({
+      resultCode: 1,
+      messages: ['Invalid author ID'],
+      data: {},
+    });
     return;
   }
 
@@ -84,7 +125,11 @@ export const getPostsByAuthor = async (
   const validOffset = Number.isNaN(offset) || offset < 0 ? 0 : offset;
 
   const posts = await findPostsByAuthorId(authorId, validLimit, validOffset);
-  response.status(200).json({ posts, limit: validLimit, offset: validOffset });
+  response.status(200).json({
+    resultCode: 0,
+    messages: [],
+    data: { posts, limit: validLimit, offset: validOffset },
+  });
 };
 
 export const updatePostHandler = async (
@@ -92,27 +137,52 @@ export const updatePostHandler = async (
   response: Response
 ): Promise<void> => {
   if (!request.user) {
-    response.status(401).json({ error: 'Unauthorized' });
+    response.status(401).json({
+      resultCode: 1,
+      messages: ['Unauthorized'],
+      data: {},
+    });
     return;
   }
 
-  const postId = Number(request.params.id);
+  try {
+    const postId = Number(request.params.id);
 
-  if (Number.isNaN(postId)) {
-    response.status(400).json({ error: 'Invalid post ID' });
-    return;
+    if (Number.isNaN(postId)) {
+      response.status(400).json({
+        resultCode: 1,
+        messages: ['Invalid post ID'],
+        data: {},
+      });
+      return;
+    }
+
+    const input: PostUpdateInput = request.body;
+    const post = await updatePost(postId, input, request.user.userId);
+    const postWithAuthor = await findPostByIdWithAuthor(post.id);
+
+    if (!postWithAuthor) {
+      response.status(500).json({
+        resultCode: 1,
+        messages: ['Failed to retrieve updated post'],
+        data: {},
+      });
+      return;
+    }
+
+    response.status(200).json({
+      resultCode: 0,
+      messages: [],
+      data: { post: postWithAuthor },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to update post';
+    response.status(400).json({
+      resultCode: 1,
+      messages: [errorMessage],
+      data: {},
+    });
   }
-
-  const input: PostUpdateInput = request.body;
-  const post = await updatePost(postId, input, request.user.userId);
-  const postWithAuthor = await findPostByIdWithAuthor(post.id);
-
-  if (!postWithAuthor) {
-    response.status(500).json({ error: 'Failed to retrieve updated post' });
-    return;
-  }
-
-  response.status(200).json({ post: postWithAuthor });
 };
 
 export const deletePostHandler = async (
@@ -120,18 +190,39 @@ export const deletePostHandler = async (
   response: Response
 ): Promise<void> => {
   if (!request.user) {
-    response.status(401).json({ error: 'Unauthorized' });
+    response.status(401).json({
+      resultCode: 1,
+      messages: ['Unauthorized'],
+      data: {},
+    });
     return;
   }
 
-  const postId = Number(request.params.id);
+  try {
+    const postId = Number(request.params.id);
 
-  if (Number.isNaN(postId)) {
-    response.status(400).json({ error: 'Invalid post ID' });
-    return;
+    if (Number.isNaN(postId)) {
+      response.status(400).json({
+        resultCode: 1,
+        messages: ['Invalid post ID'],
+        data: {},
+      });
+      return;
+    }
+
+    await deletePost(postId, request.user.userId);
+    response.status(200).json({
+      resultCode: 0,
+      messages: [],
+      data: {},
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to delete post';
+    response.status(400).json({
+      resultCode: 1,
+      messages: [errorMessage],
+      data: {},
+    });
   }
-
-  await deletePost(postId, request.user.userId);
-  response.status(204).send();
 };
 

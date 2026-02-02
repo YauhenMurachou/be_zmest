@@ -71,7 +71,8 @@ npm start
 ### Authentication
 
 - `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
+- `POST /api/auth/login` - Login user (returns `userId` in response)
+- `POST /api/auth/logout` - Logout user (requires authentication)
 - `GET /api/auth/me` - Get current user (requires authentication)
 
 ### Posts
@@ -87,6 +88,18 @@ npm start
 
 - `GET /health` - Health check endpoint
 
+## Response Format
+
+All API responses follow the **Operation Result Object** format:
+
+```json
+{
+  "resultCode": 0,      // 0 = success, 1 = error
+  "messages": [],       // Empty array if success, error messages if error
+  "data": {}            // Response data (varies by endpoint)
+}
+```
+
 ## Request/Response Examples
 
 ### Register User
@@ -97,6 +110,21 @@ POST /api/auth/register
   "username": "johndoe",
   "password": "password123"
 }
+
+Response:
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "username": "johndoe",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    }
+  }
+}
 ```
 
 ### Login
@@ -104,13 +132,38 @@ POST /api/auth/register
 POST /api/auth/login
 {
   "email": "user@example.com",
-  "password": "password123"
+  "password": "password123",
+  "rememberMe": false
 }
 
 Response:
 {
-  "user": { ... },
-  "token": "jwt-token-here"
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "userId": 1
+  }
+}
+```
+
+**Note:** The JWT token is generated but not included in the response body. 
+For authenticated requests, you'll need to handle token storage separately 
+or modify the login endpoint to include the token in the response if needed.
+
+### Get Current User
+```json
+GET /api/auth/me
+Headers: Authorization: Bearer <token>
+
+Response:
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "login": "johndoe"
+  }
 }
 ```
 
@@ -121,6 +174,36 @@ Headers: Authorization: Bearer <token>
 {
   "title": "My First Post",
   "content": "This is the content of my post"
+}
+
+Response:
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "post": {
+      "id": 1,
+      "title": "My First Post",
+      "content": "This is the content of my post",
+      "authorId": 1,
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z",
+      "author": {
+        "id": 1,
+        "username": "johndoe",
+        "email": "user@example.com"
+      }
+    }
+  }
+}
+```
+
+### Error Response
+```json
+{
+  "resultCode": 1,
+  "messages": ["Error message here"],
+  "data": {}
 }
 ```
 
@@ -139,6 +222,15 @@ src/
 └── index.ts         # Application entry point
 ```
 
+## API Compatibility
+
+This API follows the **Operation Result Object** format compatible with social network frontend applications. All responses use the standardized format:
+
+- `resultCode: 0` - Success
+- `resultCode: 1` - Error
+- `messages: []` - Array of messages (empty on success)
+- `data: {}` - Response payload
+
 ## Deployment
 
 This project can be deployed to free hosting platforms. See deployment guides:
@@ -147,9 +239,9 @@ This project can be deployed to free hosting platforms. See deployment guides:
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Detailed deployment instructions
 
 ### Recommended Free Platforms:
-- **Railway** - Easiest setup, includes PostgreSQL
-- **Render** - Good free tier, automatic SSL
-- **Fly.io** - Fast performance, global edge
+- **Render** - Truly free, 750 hours/month, includes PostgreSQL
+- **Fly.io** - Always-on, no sleep, 3 free VMs
+- **Railway** - $5 free credit/month
 
 ### Frontend Integration:
 Set `FRONTEND_URL` environment variable to your frontend domain for CORS configuration.

@@ -7,18 +7,57 @@ export const register = async (
   request: AuthenticatedRequest,
   response: Response
 ): Promise<void> => {
-  const input: UserCreateInput = request.body;
-  const user = await createUser(input);
-  response.status(201).json({ user });
+  try {
+    const input: UserCreateInput = request.body;
+    const user = await createUser(input);
+    response.status(201).json({
+      resultCode: 0,
+      messages: [],
+      data: { user },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+    response.status(400).json({
+      resultCode: 1,
+      messages: [errorMessage],
+      data: {},
+    });
+  }
 };
 
 export const login = async (
   request: AuthenticatedRequest,
   response: Response
 ): Promise<void> => {
-  const input: UserLoginInput = request.body;
-  const result = await authenticateUser(input);
-  response.status(200).json(result);
+  try {
+    const input: UserLoginInput = request.body;
+    const result = await authenticateUser(input);
+    response.status(200).json({
+      resultCode: 0,
+      messages: [],
+      data: {
+        userId: result.user.id,
+      },
+    });
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Invalid email or password';
+    response.status(401).json({
+      resultCode: 1,
+      messages: [errorMessage],
+      data: {},
+    });
+  }
+};
+
+export const logout = async (
+  request: AuthenticatedRequest,
+  response: Response
+): Promise<void> => {
+  response.status(200).json({
+    resultCode: 0,
+    messages: [],
+    data: {},
+  });
 };
 
 export const getCurrentUser = async (
@@ -26,7 +65,11 @@ export const getCurrentUser = async (
   response: Response
 ): Promise<void> => {
   if (!request.user) {
-    response.status(401).json({ error: 'Unauthorized' });
+    response.status(401).json({
+      resultCode: 1,
+      messages: ['Unauthorized'],
+      data: {},
+    });
     return;
   }
 
@@ -34,10 +77,22 @@ export const getCurrentUser = async (
   const user = await findUserById(request.user.userId);
 
   if (!user) {
-    response.status(404).json({ error: 'User not found' });
+    response.status(404).json({
+      resultCode: 1,
+      messages: ['User not found'],
+      data: {},
+    });
     return;
   }
 
-  response.status(200).json({ user });
+  response.status(200).json({
+    resultCode: 0,
+    messages: [],
+    data: {
+      id: user.id,
+      email: user.email,
+      login: user.username,
+    },
+  });
 };
 
