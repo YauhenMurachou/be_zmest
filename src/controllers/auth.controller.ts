@@ -32,13 +32,16 @@ export const login = async (
   try {
     const input: UserLoginInput = request.body;
     const result = await authenticateUser(input);
-    response.status(200).json({
-      resultCode: 0,
-      messages: [],
-      data: {
-        userId: result.user.id,
-      },
-    });
+    response
+      .set('Authorization', `Bearer ${result.token}`)
+      .status(200)
+      .json({
+        resultCode: 0,
+        messages: [],
+        data: {
+          userId: result.user.id,
+        },
+      });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Invalid email or password';
     response.status(401).json({
