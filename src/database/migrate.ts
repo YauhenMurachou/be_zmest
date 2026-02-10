@@ -29,6 +29,57 @@ const createTables = async (): Promise<void> => {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS profiles (
+        user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        about_me TEXT,
+        contacts JSONB NOT NULL DEFAULT '{}'::jsonb,
+        looking_for_a_job BOOLEAN NOT NULL DEFAULT FALSE,
+        looking_for_a_job_description TEXT,
+        full_name VARCHAR(255) NOT NULL DEFAULT '',
+        status VARCHAR(300) NOT NULL DEFAULT '',
+        photo_small_url TEXT,
+        photo_large_url TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS follows (
+        follower_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        following_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (follower_id, following_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS dialogs (
+        id SERIAL PRIMARY KEY,
+        user_one_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        user_two_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT unique_dialog_pair UNIQUE (user_one_id, user_two_id)
+      )
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        dialog_id INTEGER NOT NULL REFERENCES dialogs(id) ON DELETE CASCADE,
+        sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        body TEXT NOT NULL,
+        added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        viewed BOOLEAN NOT NULL DEFAULT FALSE,
+        spam BOOLEAN NOT NULL DEFAULT FALSE,
+        deleted_by_sender BOOLEAN NOT NULL DEFAULT FALSE,
+        deleted_by_recipient BOOLEAN NOT NULL DEFAULT FALSE
+      )
+    `);
+
+    await client.query(`
       CREATE INDEX IF NOT EXISTS idx_posts_author_id ON posts(author_id)
     `);
 
@@ -58,6 +109,22 @@ const createTables = async (): Promise<void> => {
       DROP TRIGGER IF EXISTS update_posts_updated_at ON posts;
       CREATE TRIGGER update_posts_updated_at
       BEFORE UPDATE ON posts
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+    `);
+
+    await client.query(`
+      DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+      CREATE TRIGGER update_profiles_updated_at
+      BEFORE UPDATE ON profiles
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+    `);
+
+    await client.query(`
+      DROP TRIGGER IF EXISTS update_dialogs_updated_at ON dialogs;
+      CREATE TRIGGER update_dialogs_updated_at
+      BEFORE UPDATE ON dialogs
       FOR EACH ROW
       EXECUTE FUNCTION update_updated_at_column();
     `);

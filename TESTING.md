@@ -93,7 +93,7 @@ This guide explains how to set up the database, run the application, and test th
 curl http://localhost:3000/health
 ```
 
-#### 2. Register a User
+#### 2. Register a User (internal API)
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -104,7 +104,7 @@ curl -X POST http://localhost:3000/api/auth/register \
   }'
 ```
 
-#### 3. Login
+#### 3. Login (internal API)
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -121,14 +121,17 @@ Response:
   "resultCode": 0,
   "messages": [],
   "data": {
-    "userId": 1
+    "userId": 1,
+    "token": "jwt-token-here"
   }
 }
 ```
 
-**Note:** The JWT token needs to be obtained from the login service. For testing, you may need to check the service implementation or use the token from the authentication response.
+**Note:** The JWT token is available as:
+- `data.token` in the JSON body
+- `Authorization` response header with value `Bearer <token>`
 
-#### 4. Logout
+#### 4. Logout (internal API)
 ```bash
 curl -X POST http://localhost:3000/api/auth/logout \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -277,6 +280,141 @@ Response:
 }
 ```
 
+#### 12. Login (Samurai-compatible)
+
+```bash
+curl -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "password123",
+    "rememberMe": false
+  }'
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "userId": 1,
+    "token": "jwt-token-here"
+  }
+}
+```
+
+#### 13. Get Users (Samurai-compatible)
+
+```bash
+curl "http://localhost:3000/users?page=1&count=10&term="
+```
+
+Example response:
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "johndoe",
+      "status": "Hello world",
+      "photos": {
+        "small": null,
+        "large": null
+      },
+      "followed": false
+    }
+  ],
+  "totalCount": 1,
+  "error": null
+}
+```
+
+#### 14. Get Profile
+
+```bash
+curl http://localhost:3000/profile/1
+```
+
+#### 15. Get Status
+
+```bash
+curl http://localhost:3000/profile/status/1
+```
+
+Response body is plain text status.
+
+#### 16. Update Status
+
+```bash
+curl -X PUT http://localhost:3000/profile/status \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "status": "new status from curl"
+  }'
+```
+
+#### 17. Update Profile
+
+```bash
+curl -X PUT http://localhost:3000/profile \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "aboutMe": "I am a developer",
+    "contacts": {
+      "facebook": "facebook.com/me",
+      "github": "github.com/me",
+      "instagram": null,
+      "mainLink": null,
+      "twitter": null,
+      "vk": null,
+      "website": null,
+      "youtube": null
+    },
+    "lookingForAJob": true,
+    "lookingForAJobDescription": "Looking for React/TS job",
+    "fullName": "John Doe"
+  }'
+```
+
+#### 18. Check Follow
+
+```bash
+curl http://localhost:3000/follow/1 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response: `true` or `false`.
+
+#### 19. Follow User
+
+```bash
+curl -X POST http://localhost:3000/follow/1 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+#### 20. Unfollow User
+
+```bash
+curl -X DELETE http://localhost:3000/follow/1 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+#### 21. Get Captcha URL
+
+```bash
+curl http://localhost:3000/security/get-captcha-url
+```
+
+Response:
+```json
+{
+  "url": "https://social-network.samuraijs.com/activecontent/images/captcha.jpg"
+}
+```
+
 ### Using Postman
 
 1. **Import the collection** (create manually):
@@ -401,13 +539,14 @@ All responses follow the **Operation Result Object** format:
 }
 ```
 
-**Login:**
+**Login (internal API):**
 ```json
 {
   "resultCode": 0,
   "messages": [],
   "data": {
-    "userId": 1
+    "userId": 1,
+    "token": "jwt-token-here"
   }
 }
 ```

@@ -40,6 +40,7 @@ export const login = async (
         messages: [],
         data: {
           userId: result.user.id,
+          token: result.token,
         },
       });
   } catch (error) {

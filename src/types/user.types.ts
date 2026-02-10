@@ -21,6 +21,17 @@ export type UserPublic = {
   updatedAt: Date;
 };
 
+export type UserListItem = {
+  id: number;
+  name: string;
+  status: string | null;
+  photos: {
+    small: string | null;
+    large: string | null;
+  };
+  followed: boolean;
+};
+
 export type UserLoginInput = {
   email: string;
   password: string;
