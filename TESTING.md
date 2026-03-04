@@ -415,6 +415,232 @@ Response:
 }
 ```
 
+#### 22. Start Chat (Create or Refresh Dialog)
+
+```bash
+curl -X PUT http://localhost:3000/dialogs/2 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "id": 1,
+    "userId": 2
+  }
+}
+```
+
+#### 23. Get All Dialogs
+
+```bash
+curl http://localhost:3000/dialogs \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "userId": 2,
+        "userName": "janedoe",
+        "lastMessage": "Hello!",
+        "lastMessageAddedAt": "2024-01-01T12:00:00.000Z",
+        "newMessages": 0,
+        "photos": {
+          "small": null,
+          "large": null
+        }
+      }
+    ],
+    "totalCount": 1
+  }
+}
+```
+
+#### 24. Get Messages with Friend
+
+```bash
+curl "http://localhost:3000/dialogs/2/messages?page=1&count=10" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "items": [
+      {
+        "id": 1,
+        "body": "Hello!",
+        "senderId": 2,
+        "recipientId": 1,
+        "addedAt": "2024-01-01T12:00:00.000Z",
+        "viewed": true,
+        "spam": false,
+        "deletedBy": false
+      }
+    ],
+    "totalCount": 1
+  }
+}
+```
+
+#### 25. Send Message to Friend
+
+```bash
+curl -X POST http://localhost:3000/dialogs/2/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
+  -d '{
+    "body": "Hi Jane! How are you?"
+  }'
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "id": 2,
+    "body": "Hi Jane! How are you?",
+    "senderId": 1,
+    "recipientId": 2,
+    "addedAt": "2024-01-01T12:30:00.000Z"
+  }
+}
+```
+
+#### 26. Get Message Viewed Status
+
+```bash
+curl http://localhost:3000/dialogs/messages/2/viewed \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "messageId": 2,
+    "viewed": false
+  }
+}
+```
+
+#### 27. Mark Message as Spam
+
+```bash
+curl -X POST http://localhost:3000/dialogs/messages/2/spam \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {}
+}
+```
+
+#### 28. Delete Message (For Yourself Only)
+
+```bash
+curl -X DELETE http://localhost:3000/dialogs/messages/2 \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {}
+}
+```
+
+#### 29. Restore Deleted/Spam Message
+
+```bash
+curl -X PUT http://localhost:3000/dialogs/messages/2/restore \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {}
+}
+```
+
+#### 30. Get New Messages (Newer Than Date)
+
+```bash
+curl "http://localhost:3000/dialogs/2/messages/new?newerThen=2024-01-01T12:00:00.000Z" \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "items": [
+      {
+        "id": 3,
+        "body": "New message!",
+        "senderId": 2,
+        "recipientId": 1,
+        "addedAt": "2024-01-01T13:00:00.000Z",
+        "viewed": false,
+        "spam": false,
+        "deletedBy": false
+      }
+    ]
+  }
+}
+```
+
+#### 31. Get Count of New Messages
+
+```bash
+curl http://localhost:3000/dialogs/messages/new/count \
+  -H "Authorization: Bearer YOUR_TOKEN_HERE"
+```
+
+Response:
+```json
+{
+  "resultCode": 0,
+  "messages": [],
+  "data": {
+    "items": [
+      {
+        "userId": 2,
+        "newMessages": 5
+      }
+    ]
+  }
+}
+```
+
 ### Using Postman
 
 1. **Import the collection** (create manually):

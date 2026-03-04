@@ -86,6 +86,19 @@ These match the structure from the SamuraiJS Social Network API docs.
 - `DELETE /follow/{userId}`
 - `GET /security/get-captcha-url`
 
+### Dialogs API (Samurai-compatible)
+
+- `PUT /dialogs/{userId}` - Start chat / refresh companion to top
+- `GET /dialogs` - Get all dialogs
+- `GET /dialogs/{userId}/messages` - Get messages with friend (paginated)
+- `POST /dialogs/{userId}/messages` - Send message to friend
+- `GET /dialogs/messages/{messageId}/viewed` - Check if message is viewed
+- `POST /dialogs/messages/{messageId}/spam` - Mark message as spam
+- `DELETE /dialogs/messages/{messageId}` - Delete message for yourself
+- `PUT /dialogs/messages/{messageId}/restore` - Restore deleted/spam message
+- `GET /dialogs/{userId}/messages/new?newerThen={date}` - Get new messages
+- `GET /dialogs/messages/new/count` - Get count of new messages
+
 ### Internal JSON API endpoints
 
 Authentication:

@@ -6,6 +6,7 @@ import usersRoutes from './routes/users.routes';
 import profileRoutes from './routes/profile.routes';
 import followRoutes from './routes/follow.routes';
 import securityRoutes from './routes/security.routes';
+import dialogRoutes from './routes/dialog.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 export const createApp = (): Express => {
@@ -29,6 +30,7 @@ export const createApp = (): Express => {
   app.use('/profile', profileRoutes);
   app.use('/follow', followRoutes);
   app.use('/security', securityRoutes);
+  app.use('/dialogs', dialogRoutes);
 
   // Existing API endpoints
   app.use('/api/auth', authRoutes);
