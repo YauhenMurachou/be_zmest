@@ -30,7 +30,7 @@ const errorResponse = (message: string, data: Record<string, unknown> = {}): { r
   data,
 });
 
-// PUT /dialogs/{userId} - Start chat / refresh companion to top
+// PUT /api/dialogs/{userId} - Start chat / refresh companion to top
 export const startChat = async (
   request: AuthenticatedRequest,
   response: Response
@@ -66,7 +66,7 @@ export const startChat = async (
   }
 };
 
-// GET /dialogs - Get all dialogs
+// GET /api/dialogs - Get all dialogs
 export const getDialogs = async (
   request: AuthenticatedRequest,
   response: Response
@@ -91,7 +91,7 @@ export const getDialogs = async (
   }
 };
 
-// GET /dialogs/{userId}/messages - Get messages with friend
+// GET /api/dialogs/{userId}/messages - Get messages with friend
 export const getDialogMessages = async (
   request: AuthenticatedRequest,
   response: Response
@@ -129,7 +129,7 @@ export const getDialogMessages = async (
   }
 };
 
-// POST /dialogs/{userId}/messages - Send message to friend
+// POST /api/dialogs/{userId}/messages - Send message to friend
 export const sendMessageToUser = async (
   request: AuthenticatedRequest,
   response: Response
@@ -179,7 +179,7 @@ export const sendMessageToUser = async (
   }
 };
 
-// GET /dialogs/messages/{messageId}/viewed - Check if message is viewed
+// GET /api/dialogs/messages/{messageId}/viewed - Check if message is viewed
 export const getMessageViewed = async (
   request: AuthenticatedRequest,
   response: Response
@@ -212,7 +212,7 @@ export const getMessageViewed = async (
   }
 };
 
-// POST /dialogs/messages/{messageId}/spam - Mark message as spam
+// POST /api/dialogs/messages/{messageId}/spam - Mark message as spam
 export const markSpam = async (
   request: AuthenticatedRequest,
   response: Response
@@ -245,7 +245,7 @@ export const markSpam = async (
   }
 };
 
-// DELETE /dialogs/messages/{messageId} - Delete message for yourself
+// DELETE /api/dialogs/messages/{messageId} - Delete message for yourself
 export const deleteMessageForUser = async (
   request: AuthenticatedRequest,
   response: Response
@@ -278,7 +278,7 @@ export const deleteMessageForUser = async (
   }
 };
 
-// PUT /dialogs/messages/{messageId}/restore - Restore deleted/spam message
+// PUT /api/dialogs/messages/{messageId}/restore - Restore deleted/spam message
 export const restoreDeletedMessage = async (
   request: AuthenticatedRequest,
   response: Response
@@ -311,7 +311,7 @@ export const restoreDeletedMessage = async (
   }
 };
 
-// GET /dialogs/{userId}/messages/new?newerThen={date} - Get new messages
+// GET /api/dialogs/{userId}/messages/new?newerThen={date} - Get new messages
 export const getNewDialogMessages = async (
   request: AuthenticatedRequest,
   response: Response
@@ -353,7 +353,7 @@ export const getNewDialogMessages = async (
   }
 };
 
-// GET /dialogs/messages/new/count - Get count of new messages
+// GET /api/dialogs/messages/new/count - Get count of new messages
 export const getNewMessagesTotalCount = async (
   request: AuthenticatedRequest,
   response: Response

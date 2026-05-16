@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { listUsers } from '../services/user.service';
 import { AuthenticatedRequest } from '../types/request.types';
 

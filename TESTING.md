@@ -93,7 +93,7 @@ This guide explains how to set up the database, run the application, and test th
 curl http://localhost:3000/health
 ```
 
-#### 2. Register a User (internal API)
+#### 2. Register a User
 ```bash
 curl -X POST http://localhost:3000/api/auth/register \
   -H "Content-Type: application/json" \
@@ -104,7 +104,7 @@ curl -X POST http://localhost:3000/api/auth/register \
   }'
 ```
 
-#### 3. Login (internal API)
+#### 3. Login
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -131,7 +131,7 @@ Response:
 - `data.token` in the JSON body
 - `Authorization` response header with value `Bearer <token>`
 
-#### 4. Logout (internal API)
+#### 4. Logout
 ```bash
 curl -X POST http://localhost:3000/api/auth/logout \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
@@ -280,34 +280,10 @@ Response:
 }
 ```
 
-#### 12. Login (Samurai-compatible)
+#### 12. Get Users
 
 ```bash
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "password123",
-    "rememberMe": false
-  }'
-```
-
-Response:
-```json
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {
-    "userId": 1,
-    "token": "jwt-token-here"
-  }
-}
-```
-
-#### 13. Get Users (Samurai-compatible)
-
-```bash
-curl "http://localhost:3000/users?page=1&count=10&term="
+curl "http://localhost:3000/api/users?page=1&count=10&term="
 ```
 
 Example response:
@@ -330,24 +306,24 @@ Example response:
 }
 ```
 
-#### 14. Get Profile
+#### 13. Get Profile
 
 ```bash
-curl http://localhost:3000/profile/1
+curl http://localhost:3000/api/profile/1
 ```
 
-#### 15. Get Status
+#### 14. Get Status
 
 ```bash
-curl http://localhost:3000/profile/status/1
+curl http://localhost:3000/api/profile/status/1
 ```
 
 Response body is plain text status.
 
-#### 16. Update Status
+#### 15. Update Status
 
 ```bash
-curl -X PUT http://localhost:3000/profile/status \
+curl -X PUT http://localhost:3000/api/profile/status \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d '{
@@ -355,10 +331,10 @@ curl -X PUT http://localhost:3000/profile/status \
   }'
 ```
 
-#### 17. Update Profile
+#### 16. Update Profile
 
 ```bash
-curl -X PUT http://localhost:3000/profile \
+curl -X PUT http://localhost:3000/api/profile \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d '{
@@ -379,33 +355,33 @@ curl -X PUT http://localhost:3000/profile \
   }'
 ```
 
-#### 18. Check Follow
+#### 17. Check Follow
 
 ```bash
-curl http://localhost:3000/follow/1 \
+curl http://localhost:3000/api/follow/1 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
 Response: `true` or `false`.
 
-#### 19. Follow User
+#### 18. Follow User
 
 ```bash
-curl -X POST http://localhost:3000/follow/1 \
+curl -X POST http://localhost:3000/api/follow/1 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
-#### 20. Unfollow User
+#### 19. Unfollow User
 
 ```bash
-curl -X DELETE http://localhost:3000/follow/1 \
+curl -X DELETE http://localhost:3000/api/follow/1 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
-#### 21. Get Captcha URL
+#### 20. Get Captcha URL
 
 ```bash
-curl http://localhost:3000/security/get-captcha-url
+curl http://localhost:3000/api/security/get-captcha-url
 ```
 
 Response:
@@ -415,10 +391,10 @@ Response:
 }
 ```
 
-#### 22. Start Chat (Create or Refresh Dialog)
+#### 21. Start Chat (Create or Refresh Dialog)
 
 ```bash
-curl -X PUT http://localhost:3000/dialogs/2 \
+curl -X PUT http://localhost:3000/api/dialogs/2 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -434,10 +410,10 @@ Response:
 }
 ```
 
-#### 23. Get All Dialogs
+#### 22. Get All Dialogs
 
 ```bash
-curl http://localhost:3000/dialogs \
+curl http://localhost:3000/api/dialogs \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -466,10 +442,10 @@ Response:
 }
 ```
 
-#### 24. Get Messages with Friend
+#### 23. Get Messages with Friend
 
 ```bash
-curl "http://localhost:3000/dialogs/2/messages?page=1&count=10" \
+curl "http://localhost:3000/api/dialogs/2/messages?page=1&count=10" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -496,10 +472,10 @@ Response:
 }
 ```
 
-#### 25. Send Message to Friend
+#### 24. Send Message to Friend
 
 ```bash
-curl -X POST http://localhost:3000/dialogs/2/messages \
+curl -X POST http://localhost:3000/api/dialogs/2/messages \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d '{
@@ -522,10 +498,10 @@ Response:
 }
 ```
 
-#### 26. Get Message Viewed Status
+#### 25. Get Message Viewed Status
 
 ```bash
-curl http://localhost:3000/dialogs/messages/2/viewed \
+curl http://localhost:3000/api/dialogs/messages/2/viewed \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -541,10 +517,10 @@ Response:
 }
 ```
 
-#### 27. Mark Message as Spam
+#### 26. Mark Message as Spam
 
 ```bash
-curl -X POST http://localhost:3000/dialogs/messages/2/spam \
+curl -X POST http://localhost:3000/api/dialogs/messages/2/spam \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -557,10 +533,10 @@ Response:
 }
 ```
 
-#### 28. Delete Message (For Yourself Only)
+#### 27. Delete Message (For Yourself Only)
 
 ```bash
-curl -X DELETE http://localhost:3000/dialogs/messages/2 \
+curl -X DELETE http://localhost:3000/api/dialogs/messages/2 \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -573,10 +549,10 @@ Response:
 }
 ```
 
-#### 29. Restore Deleted/Spam Message
+#### 28. Restore Deleted/Spam Message
 
 ```bash
-curl -X PUT http://localhost:3000/dialogs/messages/2/restore \
+curl -X PUT http://localhost:3000/api/dialogs/messages/2/restore \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -589,10 +565,10 @@ Response:
 }
 ```
 
-#### 30. Get New Messages (Newer Than Date)
+#### 29. Get New Messages (Newer Than Date)
 
 ```bash
-curl "http://localhost:3000/dialogs/2/messages/new?newerThen=2024-01-01T12:00:00.000Z" \
+curl "http://localhost:3000/api/dialogs/2/messages/new?newerThen=2024-01-01T12:00:00.000Z" \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -618,10 +594,10 @@ Response:
 }
 ```
 
-#### 31. Get Count of New Messages
+#### 30. Get Count of New Messages
 
 ```bash
-curl http://localhost:3000/dialogs/messages/new/count \
+curl http://localhost:3000/api/dialogs/messages/new/count \
   -H "Authorization: Bearer YOUR_TOKEN_HERE"
 ```
 
@@ -765,7 +741,7 @@ All responses follow the **Operation Result Object** format:
 }
 ```
 
-**Login (internal API):**
+**Login:**
 ```json
 {
   "resultCode": 0,

@@ -66,323 +66,109 @@ npm run build
 npm start
 ```
 
-## API Endpoints
+## API Overview
 
-### Samurai-compatible endpoints (for existing frontend)
+The API is organized around the following domains:
 
-These match the structure from the SamuraiJS Social Network API docs.
+- **Authentication** — registration, login, logout, and session management
+- **Users & Profiles** — user discovery, profile data, and status management
+- **Follow** — subscribe / unsubscribe mechanics
+- **Posts** — create, read, update, and delete posts
+- **Dialogs** — messaging between users
+- **Security** — captcha and auxiliary endpoints
 
-- `POST /auth/login`
-- `DELETE /auth/login` (logout)
-- `GET /auth/me`
-- `GET /users`
-- `GET /profile/{userId}`
-- `GET /profile/status/{userId}`
-- `PUT /profile/status`
-- `PUT /profile`
-- `PUT /profile/photo` (stubbed success)
-- `GET /follow/{userId}`
-- `POST /follow/{userId}`
-- `DELETE /follow/{userId}`
-- `GET /security/get-captcha-url`
+All endpoints are prefixed with `/api/` (except the health check at `/health`).
 
-### Dialogs API (Samurai-compatible)
+For a complete list of routes, request/response schemas, and curl examples, see **[TESTING.md](./TESTING.md)**.
 
-- `PUT /dialogs/{userId}` - Start chat / refresh companion to top
-- `GET /dialogs` - Get all dialogs
-- `GET /dialogs/{userId}/messages` - Get messages with friend (paginated)
-- `POST /dialogs/{userId}/messages` - Send message to friend
-- `GET /dialogs/messages/{messageId}/viewed` - Check if message is viewed
-- `POST /dialogs/messages/{messageId}/spam` - Mark message as spam
-- `DELETE /dialogs/messages/{messageId}` - Delete message for yourself
-- `PUT /dialogs/messages/{messageId}/restore` - Restore deleted/spam message
-- `GET /dialogs/{userId}/messages/new?newerThen={date}` - Get new messages
-- `GET /dialogs/messages/new/count` - Get count of new messages
+## Architecture
 
-### Internal JSON API endpoints
+The project follows a **layered (clean) architecture** that separates concerns into distinct layers. Each layer has a single responsibility and communicates only with the adjacent layer.
 
-Authentication:
+### Request Flow
 
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user (returns `userId` and `token` in response)
-- `POST /api/auth/logout` - Logout user (requires authentication)
-- `GET /api/auth/me` - Get current user (requires authentication)
-
-Posts:
-
-- `GET /api/posts` - Get all posts (with pagination: `?limit=50&offset=0`)
-- `GET /api/posts/:id` - Get post by ID
-- `GET /api/posts/author/:authorId` - Get posts by author (with pagination)
-- `POST /api/posts` - Create a new post (requires authentication)
-- `PUT /api/posts/:id` - Update a post (requires authentication, author only)
-- `DELETE /api/posts/:id` - Delete a post (requires authentication, author only)
-
-Health Check:
-
-- `GET /health` - Health check endpoint
-
-## Response Format
-
-All API responses follow the **Operation Result Object** format:
-
-```json
-{
-  "resultCode": 0,      // 0 = success, 1 = error
-  "messages": [],       // Empty array if success, error messages if error
-  "data": {}            // Response data (varies by endpoint)
-}
+```
+Client Request
+    ↓
+Routes (URL mapping & HTTP method)
+    ↓
+Middleware (auth, validation, CORS, error handling)
+    ↓
+Controllers (parse request, delegate to services, format response)
+    ↓
+Services (business logic, rules, data orchestration)
+    ↓
+Database (SQL queries via connection module)
+    ↓
+PostgreSQL
 ```
 
-## Request/Response Examples
+### Layers
 
-### Register User
-```json
-POST /api/auth/register
-{
-  "email": "user@example.com",
-  "username": "johndoe",
-  "password": "password123"
-}
+| Layer | Responsibility | Example |
+|-------|----------------|---------|
+| **Routes** | Declare URL paths and bind them to controller functions | `auth.routes.ts` maps `POST /api/auth/login` → `login` controller |
+| **Middleware** | Intercept requests for cross-cutting concerns (authentication, input validation, centralized error handling) | `authenticateToken` verifies JWT; `validateBody` checks Zod schemas |
+| **Controllers** | Handle the HTTP layer: extract params/body, call services, and send JSON responses | `auth.controller.ts` handles registration and login flows |
+| **Services** | Encapsulate business logic and database interactions | `user.service.ts` manages user creation, password hashing, and lookups |
+| **Database** | Connection management and SQL migrations | `connection.ts` provides the query interface; `migrate.ts` runs schema setup |
+| **Types** | Shared TypeScript type definitions used across all layers | `request.types.ts`, `user.types.ts`, `post.types.ts`, etc. |
+| **Utils** | Pure helper functions with no external dependencies | `jwt.util.ts`, `password.util.ts`, `validation.util.ts` |
 
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {
-    "user": {
-      "id": 1,
-      "email": "user@example.com",
-      "username": "johndoe",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
-    }
-  }
-}
-```
+### Key Principles
 
-### Login
-```json
-POST /api/auth/login
-{
-  "email": "user@example.com",
-  "password": "password123",
-  "rememberMe": false
-}
-
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {
-    "userId": 1,
-    "token": "jwt-token-here"
-  }
-}
-```
-
-**Note:** The JWT token is returned both:
-- In the response body as `data.token`
-- In the `Authorization` response header as `Bearer <token>`
-
-### Get Current User
-```json
-GET /api/auth/me
-Headers: Authorization: Bearer <token>
-
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {
-    "id": 1,
-    "email": "user@example.com",
-    "login": "johndoe"
-  }
-}
-```
-
-### Create Post
-```json
-POST /api/posts
-Headers: Authorization: Bearer <token>
-{
-  "title": "My First Post",
-  "content": "This is the content of my post"
-}
-
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {
-    "post": {
-      "id": 1,
-      "title": "My First Post",
-      "content": "This is the content of my post",
-      "authorId": 1,
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z",
-      "author": {
-        "id": 1,
-        "username": "johndoe",
-        "email": "user@example.com"
-      }
-    }
-  }
-}
-```
-
-### Get Users (Samurai style)
-
-```json
-GET /users?page=1&count=10&term=john
-
-Response:
-{
-  "items": [
-    {
-      "id": 1,
-      "name": "johndoe",
-      "status": "Hello world",
-      "photos": {
-        "small": null,
-        "large": null
-      },
-      "followed": false
-    }
-  ],
-  "totalCount": 1,
-  "error": null
-}
-```
-
-### Get Profile
-
-```json
-GET /profile/1
-
-Response:
-{
-  "aboutMe": "about me text",
-  "contacts": {
-    "facebook": null,
-    "github": null,
-    "instagram": null,
-    "mainLink": null,
-    "twitter": null,
-    "vk": null,
-    "website": null,
-    "youtube": null
-  },
-  "lookingForAJob": true,
-  "lookingForAJobDescription": "Looking for a job",
-  "fullName": "samurai dmitry",
-  "userId": 1,
-  "status": "my status",
-  "photos": {
-    "small": null,
-    "large": null
-  }
-}
-```
-
-### Get / Update Status
-
-```text
-GET /profile/status/1
-Response body: "my status"
-```
-
-```json
-PUT /profile/status
-Headers: Authorization: Bearer <token>
-{
-  "status": "new status"
-}
-
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {}
-}
-```
-
-### Follow / Unfollow
-
-```text
-GET /follow/1
-Headers: Authorization: Bearer <token>
-Response body: true  // or false
-```
-
-```json
-POST /follow/1
-Headers: Authorization: Bearer <token>
-
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {}
-}
-```
-
-```json
-DELETE /follow/1
-Headers: Authorization: Bearer <token>
-
-Response:
-{
-  "resultCode": 0,
-  "messages": [],
-  "data": {}
-}
-```
-
-### Security Captcha URL
-
-```json
-GET /security/get-captcha-url
-
-Response:
-{
-  "url": "https://social-network.samuraijs.com/activecontent/images/captcha.jpg"
-}
-```
-
-### Error Response
-```json
-{
-  "resultCode": 1,
-  "messages": ["Error message here"],
-  "data": {}
-}
-```
+- **Single Responsibility** — controllers know about HTTP, services know about business rules, routes know only about URL mapping.
+- **No business logic in controllers** — controllers delegate to services, keeping the HTTP layer thin.
+- **Shared types** — all layers consume types from `src/types/` to maintain type safety end-to-end.
+- **Middleware reuse** — authentication and validation logic is written once and applied declaratively on routes.
 
 ## Project Structure
 
 ```
 src/
-├── controllers/     # Request handlers
-├── database/        # Database connection and migrations
-├── middleware/      # Express middleware (auth, error handling, validation)
-├── routes/          # Route definitions
-├── services/        # Business logic
-├── types/           # TypeScript type definitions
-├── utils/           # Utility functions
-├── app.ts           # Express app configuration
-└── index.ts         # Application entry point
+├── controllers/          # HTTP request handlers (thin layer)
+│   ├── auth.controller.ts
+│   ├── dialog.controller.ts
+│   ├── follow.controller.ts
+│   ├── post.controller.ts
+│   ├── profile.controller.ts
+│   ├── security.controller.ts
+│   └── users.controller.ts
+├── database/             # DB connection and migrations
+│   ├── connection.ts
+│   └── migrate.ts
+├── middleware/           # Express middleware
+│   ├── auth.middleware.ts
+│   ├── error.middleware.ts
+│   └── validation.middleware.ts
+├── routes/               # Route definitions (URL → controller)
+│   ├── auth.routes.ts
+│   ├── dialog.routes.ts
+│   ├── follow.routes.ts
+│   ├── post.routes.ts
+│   ├── profile.routes.ts
+│   ├── security.routes.ts
+│   └── users.routes.ts
+├── services/             # Business logic and DB operations
+│   ├── dialog.service.ts
+│   ├── follow.service.ts
+│   ├── post.service.ts
+│   ├── profile.service.ts
+│   └── user.service.ts
+├── types/                # TypeScript type definitions
+│   ├── database.types.ts
+│   ├── dialog.types.ts
+│   ├── post.types.ts
+│   ├── profile.types.ts
+│   ├── request.types.ts
+│   └── user.types.ts
+├── utils/                # Helper utilities
+│   ├── jwt.util.ts
+│   ├── password.util.ts
+│   └── validation.util.ts
+├── app.ts                # Express application factory
+└── index.ts              # Entry point (server bootstrap)
 ```
-
-## API Compatibility
-
-This API follows the **Operation Result Object** format compatible with social network frontend applications. All responses use the standardized format:
-
-- `resultCode: 0` - Success
-- `resultCode: 1` - Error
-- `messages: []` - Array of messages (empty on success)
-- `data: {}` - Response payload
 
 ## Deployment
 
