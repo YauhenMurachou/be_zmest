@@ -24,16 +24,13 @@ export const createApp = (): Express => {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // SamuraiJS-like endpoints
-  app.use('/auth', authRoutes);
-  app.use('/users', usersRoutes);
-  app.use('/profile', profileRoutes);
-  app.use('/follow', followRoutes);
-  app.use('/security', securityRoutes);
-  app.use('/dialogs', dialogRoutes);
-
-  // Existing API endpoints
+  // API endpoints
   app.use('/api/auth', authRoutes);
+  app.use('/api/users', usersRoutes);
+  app.use('/api/profile', profileRoutes);
+  app.use('/api/follow', followRoutes);
+  app.use('/api/security', securityRoutes);
+  app.use('/api/dialogs', dialogRoutes);
   app.use('/api/posts', postRoutes);
 
   app.get('/health', (_request, response) => {
