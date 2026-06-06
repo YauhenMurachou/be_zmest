@@ -2,6 +2,22 @@ import { Response } from 'express';
 import { listUsers } from '../services/user.service';
 import { AuthenticatedRequest } from '../types/request.types';
 
+const parseFriendFilter = (value: unknown): boolean | undefined => {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  }
+
+  if (value === 'true' || value === true) {
+    return true;
+  }
+
+  if (value === 'false' || value === false) {
+    return false;
+  }
+
+  return undefined;
+};
+
 export const getUsers = async (
   request: AuthenticatedRequest,
   response: Response,
@@ -9,6 +25,7 @@ export const getUsers = async (
   const pageParam = request.query.page;
   const countParam = request.query.count;
   const termParam = request.query.term;
+  const friendParam = request.query.friend ?? request.query.followed;
 
   const page = pageParam ? Number(pageParam) : 1;
   const count = countParam ? Number(countParam) : 10;
@@ -19,6 +36,7 @@ export const getUsers = async (
 
   const safePage = Number.isNaN(page) || page < 1 ? 1 : page;
   const safeCount = Number.isNaN(count) || count < 1 ? 10 : Math.min(count, 100);
+  const friendFilter = parseFriendFilter(friendParam);
 
   const viewerId = request.user ? request.user.userId : null;
 
@@ -27,6 +45,7 @@ export const getUsers = async (
     safeCount,
     term,
     viewerId,
+    friendFilter,
   );
 
   response.status(200).json({
@@ -35,4 +54,3 @@ export const getUsers = async (
     error: null,
   });
 };
-
