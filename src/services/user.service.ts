@@ -106,89 +106,87 @@ export const listUsers = async (
   count: number,
   searchTerm: string | undefined,
   viewerId: number | null,
+  friendFilter: boolean | undefined,
 ): Promise<{ items: UserListItem[]; totalCount: number }> => {
   const limit = count;
   const offset = (page - 1) * count;
 
-  const baseParams: (string | number)[] = [];
-  let whereClause = '';
+  if (friendFilter !== undefined && viewerId === null) {
+    return { items: [], totalCount: 0 };
+  }
+
+  const params: (string | number)[] = [];
+  const conditions: string[] = [];
+  let paramIndex = 1;
+
+  const addParam = (value: string | number): number => {
+    params.push(value);
+    const currentIndex = paramIndex;
+    paramIndex += 1;
+    return currentIndex;
+  };
+
+  let followJoin = '';
+  let followedSelect = 'FALSE AS followed';
+
+  if (viewerId !== null) {
+    const viewerParam = addParam(viewerId);
+
+    if (friendFilter === true) {
+      followJoin = `INNER JOIN follows f ON f.following_id = u.id AND f.follower_id = $${viewerParam}`;
+      followedSelect = 'TRUE AS followed';
+    } else if (friendFilter === false) {
+      followJoin = `LEFT JOIN follows f ON f.following_id = u.id AND f.follower_id = $${viewerParam}`;
+      conditions.push(`f.follower_id IS NULL`);
+      conditions.push(`u.id <> $${viewerParam}`);
+      followedSelect = 'FALSE AS followed';
+    } else {
+      followJoin = `LEFT JOIN follows f ON f.following_id = u.id AND f.follower_id = $${viewerParam}`;
+      followedSelect = `CASE WHEN f.follower_id IS NOT NULL THEN TRUE ELSE FALSE END AS followed`;
+    }
+  }
 
   if (searchTerm && searchTerm.trim().length > 0) {
-    baseParams.push(`%${searchTerm.trim()}%`);
-    whereClause = `WHERE u.username ILIKE $${baseParams.length}`;
+    const termParam = addParam(`%${searchTerm.trim()}%`);
+    conditions.push(`u.username ILIKE $${termParam}`);
   }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const countResult = await pool.query(
     `
       SELECT COUNT(*) AS total
       FROM users u
+      ${followJoin}
       ${whereClause}
     `,
-    baseParams,
+    params,
   );
 
   const totalCount = Number(countResult.rows[0].total ?? 0);
 
-  let result;
+  const limitParam = addParam(limit);
+  const offsetParam = addParam(offset);
 
-  if (viewerId === null) {
-    const params = [...baseParams, limit, offset];
-    const limitIndex = params.length - 1;
-    const offsetIndex = params.length;
-
-    result = await pool.query(
-      `
-        SELECT
-          u.id,
-          u.username,
-          COALESCE(p.status, '') AS status,
-          COALESCE(p.photo_small_url, NULL) AS photo_small_url,
-          COALESCE(p.photo_large_url, NULL) AS photo_large_url,
-          FALSE AS followed
-        FROM users u
-        LEFT JOIN profiles p ON p.user_id = u.id
-        ${whereClause}
-        ORDER BY u.id
-        LIMIT $${limitIndex}
-        OFFSET $${offsetIndex}
-      `,
-      params,
-    );
-  } else {
-    const params: (string | number)[] = [viewerId, ...baseParams, limit, offset];
-    const limitIndex = params.length - 1;
-    const offsetIndex = params.length;
-
-    const whereWithViewer =
-      whereClause.length > 0
-        ? whereClause.replace('WHERE', 'WHERE')
-        : '';
-
-    result = await pool.query(
-      `
-        SELECT
-          u.id,
-          u.username,
-          COALESCE(p.status, '') AS status,
-          COALESCE(p.photo_small_url, NULL) AS photo_small_url,
-          COALESCE(p.photo_large_url, NULL) AS photo_large_url,
-          CASE
-            WHEN f.follower_id IS NOT NULL THEN TRUE
-            ELSE FALSE
-          END AS followed
-        FROM users u
-        LEFT JOIN profiles p ON p.user_id = u.id
-        LEFT JOIN follows f
-          ON f.following_id = u.id
-         AND f.follower_id = $1
-        ${whereWithViewer}
-        ORDER BY u.id
-        LIMIT $${limitIndex}
-        OFFSET $${offsetIndex}
-      `,
-      params,
-    );
-  }
+  const result = await pool.query(
+    `
+      SELECT
+        u.id,
+        u.username,
+        COALESCE(p.status, '') AS status,
+        COALESCE(p.photo_small_url, NULL) AS photo_small_url,
+        COALESCE(p.photo_large_url, NULL) AS photo_large_url,
+        ${followedSelect}
+      FROM users u
+      LEFT JOIN profiles p ON p.user_id = u.id
+      ${followJoin}
+      ${whereClause}
+      ORDER BY u.id
+      LIMIT $${limitParam}
+      OFFSET $${offsetParam}
+    `,
+    params,
+  );
 
   const items: UserListItem[] = result.rows.map((row) => ({
     id: Number(row.id),
@@ -203,4 +201,3 @@ export const listUsers = async (
 
   return { items, totalCount };
 };
-

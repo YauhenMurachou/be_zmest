@@ -2,6 +2,28 @@ import { Response, NextFunction } from 'express';
 import { AuthenticatedRequest } from '../types/request.types';
 import { verifyToken } from '../utils/jwt.util';
 
+export const optionalAuthenticateToken = (
+  request: AuthenticatedRequest,
+  _response: Response,
+  next: NextFunction
+): void => {
+  const authHeader = request.headers.authorization;
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    const payload = verifyToken(token);
+    request.user = payload;
+    next();
+  } catch {
+    next();
+  }
+};
+
 export const authenticateToken = (
   request: AuthenticatedRequest,
   response: Response,
