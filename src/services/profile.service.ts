@@ -53,7 +53,7 @@ export const getProfileByUserId = async (userId: number): Promise<Profile | null
         COALESCE(p.contacts, '{}'::jsonb) AS contacts,
         COALESCE(p.looking_for_a_job, FALSE) AS looking_for_a_job,
         COALESCE(p.looking_for_a_job_description, '') AS looking_for_a_job_description,
-        COALESCE(p.full_name, u.username) AS full_name,
+        COALESCE(NULLIF(p.full_name, ''), u.username) AS full_name,
         COALESCE(p.status, '') AS status,
         COALESCE(p.photo_small_url, NULL) AS photo_small_url,
         COALESCE(p.photo_large_url, NULL) AS photo_large_url
@@ -122,14 +122,31 @@ export const getStatusByUserId = async (userId: number): Promise<string> => {
   return String(result.rows[0].status ?? '');
 };
 
+export const createDefaultProfile = async (
+  userId: number,
+  fullName: string,
+): Promise<void> => {
+  await pool.query(
+    `
+      INSERT INTO profiles (user_id, full_name)
+      VALUES ($1, $2)
+      ON CONFLICT (user_id)
+      DO NOTHING
+    `,
+    [userId, fullName],
+  );
+};
+
 export const updateStatus = async (
   userId: number,
   status: string,
 ): Promise<void> => {
   await pool.query(
     `
-      INSERT INTO profiles (user_id, status)
-      VALUES ($1, $2)
+      INSERT INTO profiles (user_id, status, full_name)
+      SELECT $1, $2, u.username
+      FROM users u
+      WHERE u.id = $1
       ON CONFLICT (user_id)
       DO UPDATE SET status = EXCLUDED.status
     `,
