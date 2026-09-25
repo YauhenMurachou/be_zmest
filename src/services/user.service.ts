@@ -2,6 +2,7 @@ import { pool } from '../database/connection';
 import { User, UserCreateInput, UserPublic, UserLoginInput, UserListItem } from '../types/user.types';
 import { hashPassword, comparePassword } from '../utils/password.util';
 import { generateToken } from '../utils/jwt.util';
+import { createDefaultProfile } from './profile.service';
 
 const mapRowToUser = (row: Record<string, unknown>): User => {
   return {
@@ -39,6 +40,7 @@ export const createUser = async (input: UserCreateInput): Promise<UserPublic> =>
   }
 
   const user = mapRowToUser(result.rows[0]);
+  await createDefaultProfile(user.id, user.username);
   return mapUserToPublic(user);
 };
 
